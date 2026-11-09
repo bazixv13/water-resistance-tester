@@ -51,6 +51,9 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     uses: ./.github/workflows/release.yml
     secrets: inherit
+    permissions:
+      contents: write
+      actions: read
     with:
       channel: nightly
       tag_prefix: nightly
