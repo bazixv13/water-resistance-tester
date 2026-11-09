@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 37
+          build-tools: 37.0.0
+      - name: Make local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+      - name: Release signing key
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/upload-keystore.jks
+          chmod 600 keystore/upload-keystore.jks
+          cat > keystore.properties <<EOF
+          storeFile=keystore/upload-keystore.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=upload
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF
+      - name: Build signed release APK
+        env:
+          APP_BUILD_CHANNEL: stable
+        run: ./gradlew :app:assembleRelease --no-daemon --no-configuration-cache
+      - name: Sign APK
+        id: sign
+        run: |
+          ANDROID_HOME=$ANDROID_SDK_ROOT
+          APK=app/build/outputs/apk/release/app-release.apk
+          SIGNED=app/build/outputs/apk/release/app-release-signed.apk
+          jarsigner -verbose -keystore keystore/upload-keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -keypass "${{ secrets.KEY_PASSWORD }}" -signedjar "$SIGNED" "$APK" upload
+          rm -f "$APK"
+          zipalign -f 4 "$SIGNED" "$APK"
+          rm -f "$SIGNED"
+          echo "apk=$APK" >> $GITHUB_OUTPUT
+      - name: Version info
+        id: version
+        run: |
+          echo "name=water-resistance-${{ github.ref_name }}-$(date +%Y%m%d).apk" >> $GITHUB_OUTPUT
+          echo "tag=${{ github.ref_name }}-$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Water Resistance Tester ${{ github.ref_name }} ($(date +%Y%m%d))
+          body: |
+            Auto-built from `${{ github.ref_name }}` on $(date +%Y-%m-%d).
+
+            Build: `${{ github.sha }}`
+            Channel: stable
+          files: ${{ steps.version.outputs.name }}
+          make_latest: true

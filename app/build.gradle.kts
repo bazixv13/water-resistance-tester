@@ -6,12 +6,60 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// ---------------------------------------------------------------------------
+// Automatic versioning
+//
+// versionCode is derived from the git commit count, so it is always monotonic
+// no matter which branch or machine produces the build. The 1000 offset keeps
+// it above the hand-maintained codes used before CI took over.
+//
+// versionName is "<base>.<commitCount>", where <base> comes from the
+// app.versionBase property in gradle.properties. CI may override both through
+// APP_VERSION_NAME / APP_VERSION_CODE (nightly builds append a date suffix).
+// ---------------------------------------------------------------------------
+fun gitOutput(vararg args: String): String =
+    providers.exec {
+        commandLine("git", *args)
+        isIgnoreExitValue = true
+    }.standardOutput.asText.map { it.trim() }.getOrElse("")
+
+val gitCommitCount = gitOutput("rev-list", "--count", "HEAD").toIntOrNull() ?: 1
+val gitShortSha = gitOutput("rev-parse", "--short", "HEAD").ifBlank { "unknown" }
+val versionBase = providers.gradleProperty("app.versionBase").orElse("2.8").get()
+
+val autoVersionCode = 1000 + gitCommitCount
+val autoVersionName = "$versionBase.$gitCommitCount"
+
+val envVersionName = providers.environmentVariable("APP_VERSION_NAME").orNull
+val envVersionCode = providers.environmentVariable("APP_VERSION_CODE").orNull?.toIntOrNull()
+val buildChannel = providers.environmentVariable("APP_BUILD_CHANNEL")
+    .orElse("stable")
+    .get()
+    .replace("\"", "")
+
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) {
         FileInputStream(keystorePropertiesFile).use { load(it) }
     }
 }
+
+// Release signing material comes from keystore.properties locally, or from
+// environment variables in CI (GitHub Actions secrets). Never commit either.
+val keystorePath = providers.environmentVariable("KEYSTORE_FILE").orNull
+    ?: keystoreProperties.getProperty("storeFile")
+val keystoreStorePassword = providers.environmentVariable("KEYSTORE_PASSWORD").orNull
+    ?: keystoreProperties.getProperty("storePassword")
+val keystoreAlias = providers.environmentVariable("KEY_ALIAS").orNull
+    ?: keystoreProperties.getProperty("keyAlias")
+val keystoreKeyPassword = providers.environmentVariable("KEY_PASSWORD").orNull
+    ?: keystoreProperties.getProperty("keyPassword")
+
+val signingReady = keystorePath != null &&
+    rootProject.file(keystorePath).exists() &&
+    !keystoreStorePassword.isNullOrBlank() &&
+    !keystoreAlias.isNullOrBlank() &&
+    !keystoreKeyPassword.isNullOrBlank()
 
 android {
     namespace = "com.raywdude.waterresistance"
@@ -23,18 +71,21 @@ android {
         applicationId = "com.waterresistance.tester"
         minSdk = 26
         targetSdk = 36
-        // Bump both values for every distributed change.
-        versionCode = 10
-        versionName = "2.8-expressive-polish"
+        // Bump only the base in gradle.properties; the build number comes from git.
+        versionCode = envVersionCode ?: autoVersionCode
+        versionName = envVersionName ?: autoVersionName
+
+        buildConfigField("String", "BUILD_CHANNEL", "\"$buildChannel\"")
+        buildConfigField("String", "GIT_COMMIT", "\"$gitShortSha\"")
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        if (signingReady) {
             create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = rootProject.file(keystorePath!!)
+                storePassword = keystoreStorePassword
+                keyAlias = keystoreAlias
+                keyPassword = keystoreKeyPassword
             }
         }
     }
@@ -43,7 +94,7 @@ android {
         debug {
             // Sign the debug build with the release key so it can be installed over the release
             // APK during local iteration without wiping the device's test history.
-            if (keystorePropertiesFile.exists()) {
+            if (signingReady) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
@@ -53,7 +104,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            if (keystorePropertiesFile.exists()) {
+            if (signingReady) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }

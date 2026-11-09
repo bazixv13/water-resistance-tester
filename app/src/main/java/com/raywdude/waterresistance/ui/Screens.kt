@@ -102,6 +102,17 @@ import kotlin.math.roundToInt
  */
 private const val PRESS_HARDER_AFTER = 0.5f
 
+/**
+ * Build identity injected by Gradle/CI. Shown on the start screen and in the history sheet so a
+ * sideloaded APK can always be traced back to the commit that produced it.
+ */
+private val versionLabel: String
+    get() = buildString {
+        append("v").append(BuildConfig.VERSION_NAME)
+        append(" (").append(BuildConfig.VERSION_CODE).append(")")
+        if (BuildConfig.BUILD_CHANNEL == "nightly") append(" · nightly")
+    }
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun ReadyScreen(
@@ -273,6 +284,16 @@ fun ReadyScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp),
+                )
+            }
+
+            Entrance(delayMillis = 360) {
+                Text(
+                    text = versionLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
@@ -1259,7 +1280,7 @@ fun HistorySheetContent(
                 Spacer(Modifier.weight(1f))
             }
             Text(
-                text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                text = versionLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
