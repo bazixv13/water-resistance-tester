@@ -71,6 +71,8 @@ jobs:
         id: version
         run: |
           TAG_DATE=$(date +%Y%m%d)
+          APK_PATH=app/build/outputs/apk/release/app-release.apk
+          echo "apk=$APK_PATH" >> $GITHUB_OUTPUT
           echo "name=water-resistance-${{ github.ref_name }}-$TAG_DATE.apk" >> $GITHUB_OUTPUT
           echo "tag=${{ inputs.tag_prefix || github.ref_name }}-$TAG_DATE" >> $GITHUB_OUTPUT
           echo "release_name=Water Resistance Tester ${{ github.ref_name }} ($TAG_DATE)" >> $GITHUB_OUTPUT
@@ -86,5 +88,5 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.release_name }}
           body: ${{ steps.version.outputs.release_body }}
-          files: ${{ steps.version.outputs.name }}
+          files: ${{ steps.version.outputs.apk }}
           make_latest: true
