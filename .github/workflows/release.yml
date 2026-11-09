@@ -43,6 +43,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
       - name: Release signing key
         run: |
+          mkdir -p keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/upload-keystore.jks
           chmod 600 keystore/upload-keystore.jks
           cat > keystore.properties <<EOF
