@@ -19,7 +19,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          cmdline-tools-version: 22.0
+          cmdline-tools-version: 15859902
           packages: |
             platforms;android-37
             build-tools;37.0.0
