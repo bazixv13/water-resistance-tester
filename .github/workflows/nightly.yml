@@ -24,7 +24,7 @@ jobs:
         with:
           cmdline-tools-version: 15859902
           packages: |
-            platforms;android-37.0
+            platforms;android-37.2
             build-tools;37.0.0
       - name: Make local.properties
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
