@@ -20,10 +20,12 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android/setup-android@v5
         with:
-          api-level: 37
-          build-tools: 37.0.0
+          cmdline-tools-version: 16.0
+          packages: |
+            platforms;android-37
+            build-tools;37.0.0
       - name: Make local.properties
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
       - name: Gradle cache
