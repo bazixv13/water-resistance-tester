@@ -20,9 +20,9 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Setup Android SDK
-        uses: android/setup-android@v5
+        uses: android-actions/setup-android@v4
         with:
-          cmdline-tools-version: 16.0
+          cmdline-tools-version: 22.0
           packages: |
             platforms;android-37
             build-tools;37.0.0
