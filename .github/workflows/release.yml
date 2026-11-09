@@ -11,6 +11,10 @@ on:
       tag_prefix:
         required: true
         type: string
+      prerelease:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -89,4 +93,5 @@ jobs:
           name: ${{ steps.version.outputs.release_name }}
           body: ${{ steps.version.outputs.release_body }}
           files: ${{ steps.version.outputs.apk }}
-          make_latest: true
+          make_latest: ${{ inputs.channel != 'nightly' }}
+          prerelease: ${{ inputs.prerelease }}
