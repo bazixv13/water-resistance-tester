@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Rounded cross: stroked rather than filled, with round caps and joins so it matches the soft
+  expressive shape language instead of the sharp square-cut Material filled glyph.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M7.2,7.2 L16.8,16.8"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+    <path
+        android:pathData="M16.8,7.2 L7.2,16.8"
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2.6"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent" />
+</vector>

@@ -1,0 +1,27 @@
+# Toolchain and build output, all local to this folder
+.toolchain/
+.gradle-home/
+.logs/
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+
+# Local tooling config
+.perch/
+
+# Local build snapshots and APKs (kept on disk, not in the repo)
+backups/
+*.apk
+*.aab
+
+# Release signing material — never commit these
+keystore.properties
+keystore/
+*.jks
+*.keystore
+
+*.iml
+.idea/
+screenshot_orig.jpg

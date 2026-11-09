@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Droplet kept inside the 66dp adaptive-icon safe zone. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,31.5c-11.99,10.24 -18,19.08 -18,26.55c0,11.2 8.55,18.45 18,18.45s18,-7.25 18,-18.45C72,50.58 65.99,41.74 54,31.5z" />
+    <path
+        android:fillColor="#FF00696E"
+        android:pathData="M54,45.6c-3.9,3.9 -5.9,7.1 -5.9,9.7c0,3.7 2.6,6.2 5.9,6.2s5.9,-2.5 5.9,-6.2C59.9,52.7 57.9,49.5 54,45.6z" />
+</vector>
